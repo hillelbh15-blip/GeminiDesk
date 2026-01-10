@@ -3962,7 +3962,7 @@ async function showInstallConfirmation() {
     // Fetch release notes and show install confirmation
     try {
         const { marked } = await import('marked');
-        const options = { hostname: 'api.github.com', path: '/repos/hillelkingqt/GeminiDesk/releases/latest', method: 'GET', headers: { 'User-Agent': 'GeminiDesk-App' } };
+        const options = { hostname: 'api.github.com', path: '/repos/hillelbh15-blip/GeminiDesk/releases/latest', method: 'GET', headers: { 'User-Agent': 'GeminiDesk-App' } };
         const req = https.request(options, (res) => {
             let data = '';
             res.on('data', (chunk) => { data += chunk; });
@@ -4581,18 +4581,19 @@ ipcMain.handle('mcp-setup-doitforme', async () => {
 
 ipcMain.on('start-recording-shortcut', (event) => {
     try {
+        // Unregister all shortcuts so they bubble up to the renderer window
+        // This allows recording keys that are currently assigned (like Alt+G)
+        globalShortcut.unregisterAll();
+        console.log('Unregistered all shortcuts for recording mode');
+
+        // We still explicitly register Alt+Space because it's special/system-wide often
+        // but for Alt+G, unregistering it allows the renderer to see the keydown event.
         const registered = globalShortcut.register('Alt+Space', () => {
             console.log('Intercepted Alt+Space during recording');
             event.sender.send('shortcut-captured', 'Alt+Space');
         });
-
-        if (!registered) {
-            console.log('Failed to register Alt+Space for recording');
-        } else {
-            console.log('Global shortcut registered for recording: Alt+Space');
-        }
     } catch (err) {
-        console.error('Error registering recording shortcut:', err);
+        console.error('Error in start-recording-shortcut:', err);
     }
 });
 
@@ -4947,7 +4948,7 @@ ipcMain.on('open-release-notes', (event, version) => {
     releaseNotesWin.once('ready-to-show', () => {
         releaseNotesWin.show();
         // Fetch release notes from GitHub API
-        const url = `https://api.github.com/repos/hillelkingqt/GeminiDesk/releases/tags/v${version}`;
+        const url = `https://api.github.com/repos/hillelbh15-blip/GeminiDesk/releases/tags/v${version}`;
         fetch(url)
             .then(res => res.json())
             .then(json => {
@@ -5092,7 +5093,7 @@ autoUpdater.on('update-available', async (info) => {
             const { marked } = await import('marked');
             const options = {
                 hostname: 'api.github.com',
-                path: '/repos/hillelkingqt/GeminiDesk/releases/latest',
+                path: '/repos/hillelbh15-blip/GeminiDesk/releases/latest',
                 method: 'GET',
                 headers: { 'User-Agent': 'GeminiDesk-App' }
             };
@@ -5184,7 +5185,7 @@ autoUpdater.on('update-downloaded', async () => {
 // ================================================================= //
 
 ipcMain.on('open-download-page', () => {
-    const repoUrl = `https://github.com/hillelkingqt/GeminiDesk/releases/latest`;
+    const repoUrl = `https://github.com/hillelbh15-blip/GeminiDesk/releases/latest`;
     shell.openExternal(repoUrl);
     // Close update window after opening browser
     if (updateWin) {
@@ -6956,7 +6957,7 @@ ipcMain.on('select-pdf-direction', async (event, direction) => {
 
         htmlContent += `
     <div class="pdf-footer">
-        <p>Exported from <a href="https://github.com/hillelkingqt/GeminiDesk" target="_blank" style="color: #1967d2; text-decoration: none; font-weight: 600;">GeminiDesk</a> • ${currentDate}</p>
+        <p>Exported from <a href="https://github.com/hillelbh15-blip/GeminiDesk" target="_blank" style="color: #1967d2; text-decoration: none; font-weight: 600;">GeminiDesk</a> • ${currentDate}</p>
     </div>
     
     <script>

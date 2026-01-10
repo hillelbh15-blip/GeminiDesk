@@ -2923,13 +2923,10 @@
 
                     if (!['Control', 'Alt', 'Shift', 'Meta', 'AltGraph'].includes(e.key) && !ignoredCodes.includes(e.code)) {
                         const keyCode = e.code.replace('Key', '').replace('Digit', '');
-                        console.log('🎹 keydown DEBUG:', { key: e.key, code: e.code, keyCode, willAdd: keyCode && keyCode.length > 0 });
                         if (keyCode && keyCode.length > 0) {
                             pressedKeys.add(keyCode);
                             hasRecordedKeys = true;
                         }
-                    } else {
-                        console.log('🎹 keydown SKIPPED:', { key: e.key, code: e.code, reason: 'modifier or ignored' });
                     }
 
                     // Update button text with current combination
@@ -2959,14 +2956,6 @@
                     // Non-modifier key released - now check and save
                     const modifierCount = ['Control', 'Alt', 'Shift', 'Super'].filter(mod => pressedKeys.has(mod)).length;
                     const hasNonModifier = hasRecordedKeys;
-
-                    console.log('🎹 keyup DEBUG:', {
-                        key: e.key,
-                        pressedKeys: Array.from(pressedKeys),
-                        modifierCount,
-                        hasNonModifier,
-                        size: pressedKeys.size
-                    });
 
                     if (modifierCount > 0 && hasNonModifier && pressedKeys.size > 1) {
                         const finalShortcut = Array.from(pressedKeys).join('+');

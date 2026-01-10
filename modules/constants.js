@@ -30,3 +30,4 @@ module.exports = {
     GEMINI_URL,
     AISTUDIO_URL
 };
+

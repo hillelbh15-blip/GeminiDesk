@@ -32,7 +32,7 @@ async function translateBatch(sourceTexts, targetLang) {
             headers: {
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
-                // 'HTTP-Referer': 'https://github.com/hillelkingqt/GeminiDesk', // Optional
+                // 'HTTP-Referer': 'https://github.com/hillelbh15-blip/GeminiDesk', // Optional
             },
             body: JSON.stringify({
                 model: MODEL,
@@ -120,3 +120,4 @@ async function main() {
 }
 
 main().catch(console.error);
+

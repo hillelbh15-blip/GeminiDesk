@@ -250,3 +250,4 @@ async function setProfileImageForAccount(accountIndex, imageUrl) {
 
     return updateAccountMetadata(accountIndex, updates);
 }
+

@@ -158,3 +158,4 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSegments({});
     }
 });
+

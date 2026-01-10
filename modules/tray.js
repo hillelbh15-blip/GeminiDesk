@@ -87,3 +87,4 @@ module.exports = {
     getTray,
     setUpdateTrayCallback
 };
+

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/hillelkingqt/GeminiDesk/main/icons/icon.ico" alt="GeminiDesk Logo" width="150">
+  <img src="https://raw.githubusercontent.com/hillelbh15-blip/GeminiDesk/main/icons/icon.ico" alt="GeminiDesk Logo" width="150">
 </p>
 
 <h1 align="center">🚀 GeminiDesk - The Ultimate Gemini Desktop Super-App 🚀</h1>
@@ -11,14 +11,14 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/hillelkingqt/GeminiDesk/releases/latest">
-    <img src="https://img.shields.io/github/v/release/hillelkingqt/GeminiDesk?style=for-the-badge&logo=github&label=Latest%20Release&color=8ab4f8" alt="Latest Release">
+    <a href="https://github.com/hillelbh15-blip/GeminiDesk/releases/latest">
+    <img src="https://img.shields.io/github/v/release/hillelbh15-blip/GeminiDesk?style=for-the-badge&logo=github&label=Latest%20Release&color=8ab4f8" alt="Latest Release">
   </a>
-  <a href="https://github.com/hillelkingqt/GeminiDesk/releases">
-    <img src="https://img.shields.io/github/downloads/hillelkingqt/GeminiDesk/total?style=for-the-badge&logo=github&color=c58af9" alt="Total Downloads">
+  <a href="https://github.com/hillelbh15-blip/GeminiDesk/releases">
+    <img src="https://img.shields.io/github/downloads/hillelbh15-blip/GeminiDesk/total?style=for-the-badge&logo=github&color=c58af9" alt="Total Downloads">
   </a>
-    <a href="https://github.com/hillelkingqt/GeminiDesk/issues">
-    <img src="https://img.shields.io/github/issues/hillelkingqt/GeminiDesk?style=for-the-badge&logo=github&color=81c995" alt="Issues">
+    <a href="https://github.com/hillelbh15-blip/GeminiDesk/issues">
+    <img src="https://img.shields.io/github/issues/hillelbh15-blip/GeminiDesk?style=for-the-badge&logo=github&color=81c995" alt="Issues">
   </a>
   <br />
   <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=for-the-badge&logo=windows" alt="Platform: Windows">
@@ -137,7 +137,7 @@ Access the magic from anywhere in your OS. (Fully customizable in Settings!)
 
 Getting this slab of awesome onto your machine is laughably simple.
 
-1.  Brave the digital seas and navigate to the [**Latest Release**](https://github.com/hillelkingqt/GeminiDesk/releases/latest) page.
+1.  Brave the digital seas and navigate to the [**Latest Release**](https://github.com/hillelbh15-blip/GeminiDesk/releases/latest) page.
 2.  Download the correct installer for your OS.
 
 ### <img src="https://img.shields.io/badge/-Windows-0078D6?style=flat&logo=windows&logoColor=white" height="20"> Windows
@@ -219,7 +219,7 @@ Want to peek under the hood or forge your own version? We admire your courage.
 
 1.  **Clone the legend:**
     ```sh
-    git clone https://github.com/hillelkingqt/GeminiDesk.git
+    git clone https://github.com/hillelbh15-blip/GeminiDesk.git
     cd GeminiDesk
     ```
 
@@ -256,4 +256,5 @@ Contributions are the lifeblood of open source. If you have an idea that's so go
 ## 📜 License
 
 This project is distributed under the MIT License, which basically means you can do whatever you want with it as long as you give us a little nod. See the full legal mumbo-jumbo in the [LICENSE](LICENSE) file.
+
 
