@@ -1327,6 +1327,13 @@
                 <label class="toggle-switch"><input type="checkbox" id="setting-geminimarkEnabled"><span
                         class="slider"></span></label>
             </div>
+                <!-- NotebookLM Toggle -->
+                <div class="setting-item">
+                <div class="setting-label"><strong data-i18n="notebooklmEnabled-label">Enable NotebookLM</strong><span
+                    data-i18n="notebooklmEnabled-desc">Show the NotebookLM option in the startup chooser.</span></div>
+                <label class="toggle-switch"><input type="checkbox" id="setting-notebooklmEnabled"><span
+                    class="slider"></span></label>
+                </div>
         </div>
         <div class="setting-category">
             <h3 class="setting-category-title">
@@ -2308,6 +2315,9 @@
                     // Geminimark renderer setting
                     const geminimarkEl = document.getElementById('setting-geminimarkEnabled');
                     if (geminimarkEl) geminimarkEl.checked = !!settings.geminimarkEnabled;
+                    // NotebookLM toggle
+                    const notebooklmEl = document.getElementById('setting-notebooklmEnabled');
+                    if (notebooklmEl) notebooklmEl.checked = !!settings.notebooklmEnabled;
 
                     document.getElementById('setting-shortcutsGlobal').checked = settings.shortcutsGlobal !== false;
                     document.getElementById('setting-showAdvancedShortcutOptions').checked = settings.showAdvancedShortcutOptions || false;
@@ -2681,6 +2691,14 @@
             if (geminimarkCheckbox) {
                 geminimarkCheckbox.addEventListener('change', (e) => {
                     electronAPI.updateSetting('geminimarkEnabled', e.target.checked);
+                });
+            }
+
+            // NotebookLM toggle
+            const notebooklmCheckbox = document.getElementById('setting-notebooklmEnabled');
+            if (notebooklmCheckbox) {
+                notebooklmCheckbox.addEventListener('change', (e) => {
+                    electronAPI.updateSetting('notebooklmEnabled', e.target.checked);
                 });
             }
 

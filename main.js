@@ -299,7 +299,7 @@ async function createAndManageLoginWindowForPartition(loginUrl, targetPartition,
         // Treat both the canonical GEMINI_URL and URLs like
         // https://gemini.google.com/u/1/app as successful navigation.
         const isGeminiWithUserPath = /\/u\/\d+\/app(\/.*)?$/.test(navigatedUrl);
-        const isLoginSuccess = navigatedUrl.startsWith(GEMINI_URL) || navigatedUrl.startsWith(AISTUDIO_URL) || isGeminiWithUserPath;
+        const isLoginSuccess = navigatedUrl.startsWith(GEMINI_URL) || navigatedUrl.startsWith(AISTUDIO_URL) || navigatedUrl.startsWith(NOTEBOOKLM_URL) || isGeminiWithUserPath;
         console.log('Login popup navigated to:', navigatedUrl);
         if (!isLoginSuccess) return;
 
@@ -421,7 +421,9 @@ async function createAndManageLoginWindowForPartition(loginUrl, targetPartition,
                 // open or load a window using the new account partition so the user
                 // sees the newly added account immediately instead of just reloading.
                 try {
-                    const mode = (navigatedUrl && navigatedUrl.startsWith(AISTUDIO_URL)) ? 'aistudio' : 'gemini';
+                    const mode = (navigatedUrl && navigatedUrl.startsWith(AISTUDIO_URL))
+                        ? 'aistudio'
+                        : (navigatedUrl && navigatedUrl.startsWith(NOTEBOOKLM_URL) ? 'notebooklm' : 'gemini');
                     let targetWindow = BrowserWindow.getAllWindows().find(w => w.accountIndex === accountIndex && !w.isDestroyed());
                     if (targetWindow) {
                         try { loadGemini(mode, targetWindow, navigatedUrl, { accountIndex }); }
@@ -559,7 +561,7 @@ const trayModule = require('./modules/tray');
 app.disableHardwareAcceleration();
 
 // Use constants from module
-const { REAL_CHROME_UA, STABLE_USER_AGENT, SESSION_PARTITION, GEMINI_URL, AISTUDIO_URL, isMac, execPath, launcherPath, margin, originalSize, canvasSize } = constants;
+const { REAL_CHROME_UA, STABLE_USER_AGENT, SESSION_PARTITION, GEMINI_URL, AISTUDIO_URL, NOTEBOOKLM_URL, isMac, execPath, launcherPath, margin, originalSize, canvasSize } = constants;
 
 // Allow third-party/partitioned cookies used by Google Sign-In
 app.commandLine.appendSwitch('enable-features', 'ThirdPartyStoragePartitioning');
@@ -600,9 +602,22 @@ app.on('web-contents-created', (event, contents) => {
 
     // Prevent new window creation from untrusted sources if not handled separately
     contents.setWindowOpenHandler(({ url }) => {
-        // ... validation logic is mostly handled in specific window creation checks
-        // but a global safe default is good.
-        if (url.startsWith('https://')) return { action: 'allow' };
+        // Check if the URL is internal to the application (Gemini, AI Studio, Google Auth)
+        const isInternal =
+            url.includes('gemini.google.com') ||
+            url.includes('aistudio.google.com') ||
+            url.includes('notebooklm.google.com') ||
+            url.includes('accounts.google.com');
+
+        // If internal, allow creating a child window
+        if (isInternal) {
+            return { action: 'allow' };
+        }
+
+        // Otherwise, open in default system browser and deny internal window creation
+        if (url.startsWith('http')) {
+            shell.openExternal(url);
+        }
         return { action: 'deny' };
     });
 });
@@ -1094,18 +1109,21 @@ function getIconPath() {
 // Different AppUserModelIds for taskbar grouping (Windows only)
 const GEMINI_APP_USER_MODEL_ID = 'com.geminidesk.gemini';
 const AISTUDIO_APP_USER_MODEL_ID = 'com.geminidesk.aistudio';
+const NOTEBOOKLM_APP_USER_MODEL_ID = 'com.geminidesk.notebooklm';
 
 /**
  * Update the window's AppUserModelId to group windows by app mode in the taskbar.
  * On Windows, this separates Gemini windows from AI Studio windows in the taskbar.
  * @param {BrowserWindow} win - The window to update
- * @param {string} mode - 'gemini' or 'aistudio'
+ * @param {string} mode - 'gemini', 'aistudio', or 'notebooklm'
  */
 function updateWindowAppUserModelId(win, mode) {
     if (process.platform !== 'win32') return; // Only relevant on Windows
 
     try {
-        const appId = mode === 'aistudio' ? AISTUDIO_APP_USER_MODEL_ID : GEMINI_APP_USER_MODEL_ID;
+        const appId = mode === 'aistudio'
+            ? AISTUDIO_APP_USER_MODEL_ID
+            : (mode === 'notebooklm' ? NOTEBOOKLM_APP_USER_MODEL_ID : GEMINI_APP_USER_MODEL_ID);
         // Set the AppUserModelId for this specific window
         // Use the same icon for both modes
         if (win && !win.isDestroyed() && typeof win.setAppDetails === 'function') {
@@ -1113,7 +1131,7 @@ function updateWindowAppUserModelId(win, mode) {
                 appId: appId,
                 appIconPath: getIconPath(),
                 relaunchCommand: '',
-                relaunchDisplayName: mode === 'aistudio' ? 'AI Studio' : 'Gemini'
+                relaunchDisplayName: mode === 'aistudio' ? 'AI Studio' : (mode === 'notebooklm' ? 'NotebookLM' : 'Gemini')
             });
             console.log(`Set AppUserModelId for window ${win.id} to ${appId} (mode: ${mode})`);
         }
@@ -1346,11 +1364,20 @@ const shortcutActions = {
                 (async function() {
                     console.log('GeminiDesk: Executing New Chat command');
                     
-                    const waitForElement = (selector, timeout = 1000) => {
+                    const isElementVisible = (el) => {
+                        if (!el) return false;
+                        if (el.closest('[aria-hidden="true"]')) return false;
+                        const style = window.getComputedStyle(el);
+                        if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+                        if (el.getClientRects().length === 0) return false;
+                        return true;
+                    };
+
+                    const waitForElement = (selector, timeout = 1200) => {
                         return new Promise((resolve) => {
                             const interval = setInterval(() => {
                                 const el = document.querySelector(selector);
-                                if (el && !el.disabled && el.offsetParent !== null) { 
+                                if (el && !el.disabled && isElementVisible(el)) {
                                     clearInterval(interval);
                                     resolve(el);
                                 }
@@ -1370,18 +1397,21 @@ const shortcutActions = {
 
                     // Selectors for the New Chat button
                     const selectors = [
+                        'a[data-test-id="expanded-button"][href="/app"]',
+                        'a[data-test-id="expanded-button"][aria-label="New chat"]',
+                        'a[aria-label="New chat"][href="/app"]',
                         'button[aria-label="New chat"]',
                         'button[aria-label="Create new chat"]',
-                        '[data-test-id="new-chat-button"] button', 
+                        '[data-test-id="new-chat-button"] button',
                         '[data-test-id="new-chat-button"]',
                         '.chat-history-new-chat-button',
-                        'button.new-chat-button' // Generic guess
+                        'button.new-chat-button'
                     ];
 
                     // 1. Try to find the button directly
                     for (const sel of selectors) {
                         const el = document.querySelector(sel);
-                        if (el && !el.disabled && el.offsetParent !== null) {
+                        if (el && !el.disabled && isElementVisible(el)) {
                             console.log('GeminiDesk: Found New Chat button directly:', sel);
                             simulateClick(el);
                             return;
@@ -1663,17 +1693,46 @@ const shortcutActions = {
             // First open new chat, then change model
             const script = `
                 (function() {
-                    // First click the main menu button
-                    const menuButton = document.querySelector('button[aria-label="Main menu"]');
+                    const isElementVisible = (el) => {
+                        if (!el) return false;
+                        if (el.closest('[aria-hidden="true"]')) return false;
+                        const style = window.getComputedStyle(el);
+                        if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+                        if (el.getClientRects().length === 0) return false;
+                        return true;
+                    };
+
+                    const selectors = [
+                        'a[data-test-id="expanded-button"][href="/app"]',
+                        'a[data-test-id="expanded-button"][aria-label="New chat"]',
+                        'a[aria-label="New chat"][href="/app"]',
+                        'button[aria-label="New chat"]',
+                        '[data-test-id="new-chat-button"] button',
+                        '[data-test-id="new-chat-button"]'
+                    ];
+
+                    const clickFirstVisible = () => {
+                        for (const sel of selectors) {
+                            const el = document.querySelector(sel);
+                            if (el && isElementVisible(el)) {
+                                el.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    };
+
+                    if (clickFirstVisible()) return;
+
+                    const menuButton = document.querySelector('button[aria-label="Main menu"]') ||
+                                       document.querySelector('button[aria-label="Expand menu"]');
                     if (menuButton) {
                         menuButton.click();
-                        // Wait for menu to open, then click New chat
                         setTimeout(() => {
-                            const newChatButton = document.querySelector('button[aria-label="New chat"]');
-                            if (newChatButton) {
-                                newChatButton.click();
+                            if (!clickFirstVisible()) {
+                                window.location.href = 'https://gemini.google.com/app';
                             }
-                        }, 100);
+                        }, 150);
                     }
                 })();
             `;
@@ -1697,17 +1756,46 @@ const shortcutActions = {
             // First open new chat, then change model
             const script = `
                 (function() {
-                    // First click the main menu button
-                    const menuButton = document.querySelector('button[aria-label="Main menu"]');
+                    const isElementVisible = (el) => {
+                        if (!el) return false;
+                        if (el.closest('[aria-hidden="true"]')) return false;
+                        const style = window.getComputedStyle(el);
+                        if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+                        if (el.getClientRects().length === 0) return false;
+                        return true;
+                    };
+
+                    const selectors = [
+                        'a[data-test-id="expanded-button"][href="/app"]',
+                        'a[data-test-id="expanded-button"][aria-label="New chat"]',
+                        'a[aria-label="New chat"][href="/app"]',
+                        'button[aria-label="New chat"]',
+                        '[data-test-id="new-chat-button"] button',
+                        '[data-test-id="new-chat-button"]'
+                    ];
+
+                    const clickFirstVisible = () => {
+                        for (const sel of selectors) {
+                            const el = document.querySelector(sel);
+                            if (el && isElementVisible(el)) {
+                                el.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    };
+
+                    if (clickFirstVisible()) return;
+
+                    const menuButton = document.querySelector('button[aria-label="Main menu"]') ||
+                                       document.querySelector('button[aria-label="Expand menu"]');
                     if (menuButton) {
                         menuButton.click();
-                        // Wait for menu to open, then click New chat
                         setTimeout(() => {
-                            const newChatButton = document.querySelector('button[aria-label="New chat"]');
-                            if (newChatButton) {
-                                newChatButton.click();
+                            if (!clickFirstVisible()) {
+                                window.location.href = 'https://gemini.google.com/app';
                             }
-                        }, 100);
+                        }, 150);
                     }
                 })();
             `;
@@ -1731,17 +1819,46 @@ const shortcutActions = {
             // First open new chat, then change model
             const script = `
                 (function() {
-                    // First click the main menu button
-                    const menuButton = document.querySelector('button[aria-label="Main menu"]');
+                    const isElementVisible = (el) => {
+                        if (!el) return false;
+                        if (el.closest('[aria-hidden="true"]')) return false;
+                        const style = window.getComputedStyle(el);
+                        if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+                        if (el.getClientRects().length === 0) return false;
+                        return true;
+                    };
+
+                    const selectors = [
+                        'a[data-test-id="expanded-button"][href="/app"]',
+                        'a[data-test-id="expanded-button"][aria-label="New chat"]',
+                        'a[aria-label="New chat"][href="/app"]',
+                        'button[aria-label="New chat"]',
+                        '[data-test-id="new-chat-button"] button',
+                        '[data-test-id="new-chat-button"]'
+                    ];
+
+                    const clickFirstVisible = () => {
+                        for (const sel of selectors) {
+                            const el = document.querySelector(sel);
+                            if (el && isElementVisible(el)) {
+                                el.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    };
+
+                    if (clickFirstVisible()) return;
+
+                    const menuButton = document.querySelector('button[aria-label="Main menu"]') ||
+                                       document.querySelector('button[aria-label="Expand menu"]');
                     if (menuButton) {
                         menuButton.click();
-                        // Wait for menu to open, then click New chat
                         setTimeout(() => {
-                            const newChatButton = document.querySelector('button[aria-label="New chat"]');
-                            if (newChatButton) {
-                                newChatButton.click();
+                            if (!clickFirstVisible()) {
+                                window.location.href = 'https://gemini.google.com/app';
                             }
-                        }, 100);
+                        }, 150);
                     }
                 })();
             `;
@@ -3105,7 +3222,7 @@ function createWindow(state = null, show = true) {
             : newWin.accountIndex;
         loadGemini(state.mode || settings.defaultMode, newWin, state.url, { accountIndex: stateAccountIndex });
 
-        if (state.url && state.url !== GEMINI_URL && state.url !== AISTUDIO_URL) {
+        if (state.url && state.url !== GEMINI_URL && state.url !== AISTUDIO_URL && state.url !== NOTEBOOKLM_URL) {
             console.log('Restoring window with specific chat URL:', state.url);
         }
     } else if (!settings.onboardingShown) {
@@ -3152,10 +3269,14 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
         console.log('resetSession option ignored - sessions are now persistent for multi-account support');
     }
 
-    const url = initialUrl || (mode === 'aistudio' ? AISTUDIO_URL : GEMINI_URL);
+    const url = initialUrl || (mode === 'aistudio' ? AISTUDIO_URL : (mode === 'notebooklm' ? NOTEBOOKLM_URL : GEMINI_URL));
 
     if (mode === 'aistudio') {
         console.log('GeminiDesk: Loading AI Studio mode');
+    }
+
+    if (mode === 'notebooklm') {
+        console.log('GeminiDesk: Loading NotebookLM mode');
     }
 
     let loginWin = null;
@@ -3201,7 +3322,7 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
             // Treat both the canonical GEMINI_URL and URLs like
             // https://gemini.google.com/u/1/app as successful navigation.
             const isGeminiWithUserPath = /\/u\/\d+\/app(\/.*)?$/.test(navigatedUrl);
-            const isLoginSuccess = navigatedUrl.startsWith(GEMINI_URL) || navigatedUrl.startsWith(AISTUDIO_URL) || isGeminiWithUserPath;
+            const isLoginSuccess = navigatedUrl.startsWith(GEMINI_URL) || navigatedUrl.startsWith(AISTUDIO_URL) || navigatedUrl.startsWith(NOTEBOOKLM_URL) || isGeminiWithUserPath;
             console.log('Legacy login window navigated to:', navigatedUrl);
 
             if (isLoginSuccess) {
@@ -3314,7 +3435,9 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
                     // sees it immediately. If a window already uses this account,
                     // load into that window; otherwise create a new window for it.
                     try {
-                        const mode = (loginWin && loginWin.getURL && loginWin.getURL().startsWith(AISTUDIO_URL)) ? 'aistudio' : 'gemini';
+                        const mode = (loginWin && loginWin.getURL && loginWin.getURL().startsWith(AISTUDIO_URL))
+                            ? 'aistudio'
+                            : (loginWin && loginWin.getURL && loginWin.getURL().startsWith(NOTEBOOKLM_URL) ? 'notebooklm' : 'gemini');
                         let targetWindow = BrowserWindow.getAllWindows().find(w => w.accountIndex === targetAccountIndex && !w.isDestroyed());
                         if (targetWindow) {
                             try { loadGemini(mode, targetWindow, navigatedUrl, { accountIndex: targetAccountIndex }); }
@@ -3350,7 +3473,7 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
 
         existingView.webContents.on('did-finish-load', () => {
             const viewUrl = existingView.webContents.getURL() || '';
-            if (viewUrl.startsWith('https://gemini.google.com') || viewUrl.startsWith('https://aistudio.google.com')) {
+            if (viewUrl.startsWith('https://gemini.google.com') || viewUrl.startsWith('https://aistudio.google.com') || viewUrl.startsWith('https://notebooklm.google.com')) {
                 maybeCaptureAccountProfile(existingView, targetAccountIndex, options.forceProfileCapture);
                 checkAndSendDefaultPrompt(existingView, viewUrl, mode);
             }
@@ -3427,6 +3550,7 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
             const isGoogleLogin = /^https:\/\/accounts\.google\.com\//.test(popupUrl);
             const isGemini = parsed.hostname === 'gemini.google.com' || parsed.hostname.endsWith('.gemini.google.com');
             const isAistudio = parsed.hostname === 'aistudio.google.com' || parsed.hostname.endsWith('.aistudio.google.com');
+            const isNotebooklm = parsed.hostname === 'notebooklm.google.com' || parsed.hostname.endsWith('.notebooklm.google.com');
 
             if (isGoogleLogin) {
                 createAndManageLoginWindow(popupUrl);
@@ -3434,7 +3558,7 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
             }
 
             // Handle gemini/aistudio links opened from within the webview: load inside the app
-            if (isGemini || isAistudio) {
+            if (isGemini || isAistudio || isNotebooklm) {
                 try {
                     // Determine account index from query param `authuser` if present
                     let authuser = parsed.searchParams.get('authuser');
@@ -3445,14 +3569,14 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
                         try { accountsModule.switchAccount(accountIdx); } catch (e) { console.warn('Failed to switch account to', accountIdx, e); }
                     }
 
-                    const mode = isAistudio ? 'aistudio' : 'gemini';
+                    const mode = isAistudio ? 'aistudio' : (isNotebooklm ? 'notebooklm' : 'gemini');
                     try {
                         loadGemini(mode, targetWin, popupUrl, (typeof accountIdx === 'number') ? { accountIndex: accountIdx } : {});
                     } catch (e) {
                         console.warn('Failed to load gemini/aistudio URL into app window:', e && e.message ? e.message : e);
                     }
                 } catch (e) {
-                    console.warn('Error handling internal gemini/aistudio popup URL:', e && e.message ? e.message : e);
+                    console.warn('Error handling internal gemini/aistudio/notebooklm popup URL:', e && e.message ? e.message : e);
                 }
                 return { action: 'deny' };
             }
@@ -3554,7 +3678,7 @@ async function loadGemini(mode, targetWin, initialUrl, options = {}) {
         }
 
         const viewUrl = newView.webContents.getURL() || '';
-        if (viewUrl.startsWith('https://gemini.google.com') || viewUrl.startsWith('https://aistudio.google.com')) {
+        if (viewUrl.startsWith('https://gemini.google.com') || viewUrl.startsWith('https://aistudio.google.com') || viewUrl.startsWith('https://notebooklm.google.com')) {
             maybeCaptureAccountProfile(newView, targetAccountIndex, options.forceProfileCapture);
             checkAndSendDefaultPrompt(newView, viewUrl, mode);
         }

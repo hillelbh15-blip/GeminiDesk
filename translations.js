@@ -51,6 +51,8 @@ const translations = {
         "aiStudioRtlEnabled-desc": "Automatically enables Right-to-Left layout for AI Studio (Hebrew, Arabic, etc.).",
         "geminimarkEnabled-label": "Enable Gemini Markdown Renderer",
         "geminimarkEnabled-desc": "Enable the Markdown & LaTeX renderer inside Gemini (renders Markdown and LaTeX within user queries).",
+        "notebooklmEnabled-label": "Enable NotebookLM",
+        "notebooklmEnabled-desc": "Show the NotebookLM option in the startup chooser.",
         "restoreWindows-label": "Restore Windows on Launch",
         "restoreWindows-desc": "Reopen previous windows at startup.",
         "showCloseButton-label": "Show Close Button",

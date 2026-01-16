@@ -244,6 +244,10 @@
             fill: #81c995;
         }
 
+        #mode-toggle-button .notebooklm-icon {
+            fill: #fbbc04;
+        }
+
         #mode-toggle-button:hover .gemini-icon {
             fill: #8ab4f8;
             filter: drop-shadow(0 0 5px #8ab4f8);
@@ -254,12 +258,21 @@
             filter: drop-shadow(0 0 5px #81c995);
         }
 
+        #mode-toggle-button:hover .notebooklm-icon {
+            fill: #fbbc04;
+            filter: drop-shadow(0 0 5px #fbbc04);
+        }
+
         html.light-mode #mode-toggle-button .gemini-icon {
             fill: #1a73e8;
         }
 
         html.light-mode #mode-toggle-button .aistudio-icon {
             fill: #1e8e3e;
+        }
+
+        html.light-mode #mode-toggle-button .notebooklm-icon {
+            fill: #f29900;
         }
 
         html.light-mode #mode-toggle-button:hover .gemini-icon {
@@ -270,6 +283,11 @@
         html.light-mode #mode-toggle-button:hover .aistudio-icon {
             fill: #1e8e3e;
             filter: drop-shadow(0 0 5px #1e8e3e);
+        }
+
+        html.light-mode #mode-toggle-button:hover .notebooklm-icon {
+            fill: #f29900;
+            filter: drop-shadow(0 0 5px #f29900);
         }
 
         /* Screenshot Send Button Styles */
@@ -325,6 +343,10 @@
                 <svg class="mode-icon aistudio-icon" aria-label="Google AI Studio logo" viewBox="0 0 299 310" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M125.365 32C120.691 38.5727 116.782 45.7277 113.766 53.334H64C40.4361 53.3342 21.3342 72.4361 21.334 96V245.334C21.3344 268.898 40.4362 288 64 288H213.334C236.898 288 256 268.898 256 245.334V179.93C263.778 175.739 270.945 170.561 277.334 164.563V245.334C277.334 280.68 248.68 309.334 213.334 309.334H64C28.6542 309.334 0.00038177 280.68 0 245.334V96C0.000171479 60.654 28.654 32.0002 64 32H125.365Z" fill="currentColor"></path>
                     <path d="M281.333 71.5244C269.006 66.218 258.221 58.9383 248.972 49.6942C239.728 40.4502 232.448 29.6601 227.142 17.3332C225.105 12.6088 223.468 7.75264 222.213 2.77367C221.804 1.14585 220.344 0 218.666 0C216.988 0 215.529 1.14585 215.12 2.77367C213.865 7.75264 212.228 12.6043 210.191 17.3332C204.884 29.6601 197.605 40.4502 188.36 49.6942C179.116 58.9383 168.326 66.218 155.999 71.5244C151.275 73.5614 146.419 75.1984 141.44 76.4533C139.812 76.8626 138.666 78.3222 138.666 80C138.666 81.6778 139.812 83.1374 141.44 83.5467C146.419 84.8016 151.271 86.4386 155.999 88.4756C168.326 93.782 179.112 101.062 188.36 110.306C197.609 119.55 204.884 130.34 210.191 142.667C212.228 147.391 213.865 152.247 215.12 157.226C215.529 158.854 216.988 160 218.666 160C220.344 160 221.804 158.854 222.213 157.226C223.468 152.247 225.105 147.396 227.142 142.667C232.448 130.34 239.728 119.554 248.972 110.306C258.216 101.062 269.006 93.782 281.333 88.4756C286.057 86.4386 290.914 84.8016 295.893 83.5467C297.52 83.1374 298.666 81.6778 298.666 80C298.666 78.3222 297.52 76.8626 295.893 76.4533C290.914 75.1984 286.062 73.5614 281.333 71.5244Z" fill="currentColor"></path>
+                </svg>
+                <!-- NotebookLM Icon - shown when in NotebookLM mode, click to switch to Gemini -->
+                <svg class="mode-icon notebooklm-icon" viewBox="0 0 106 78" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="currentColor" d="M52.96.1C23.71.1,0,23.61,0,52.62v25.15h9.76v-2.51c0-11.77,9.61-21.31,21.48-21.31s21.48,9.54,21.48,21.31v2.51h9.76v-2.51c0-17.11-13.99-30.98-31.24-30.98-6.72,0-12.94,2.1-18.03,5.69,5.33-10.51,16.31-17.73,28.99-17.73,17.91,0,32.43,14.41,32.43,32.16v13.36h9.76v-13.36c0-23.11-18.89-41.85-42.19-41.85-10.48,0-20.06,3.79-27.44,10.06,7.25-13.59,21.63-22.84,38.21-22.84,23.86,0,43.2,19.18,43.2,42.84v25.15h9.76v-25.15C105.92,23.61,82.21.1,52.96.1Z" />
                 </svg>
             </button>
             <button id="screenshot-send-button" class="icon-button" data-tooltip="Auto-Screenshot on Send" style="display:none;">
@@ -743,16 +765,25 @@
                 currentAppMode = mode;
                 const geminiIcon = modeToggleButton.querySelector('.gemini-icon');
                 const aistudioIcon = modeToggleButton.querySelector('.aistudio-icon');
+                const notebooklmIcon = modeToggleButton.querySelector('.notebooklm-icon');
                 
                 if (mode === 'aistudio') {
                     // Currently in AI Studio mode - show AI Studio icon, click will switch to Gemini
                     geminiIcon.classList.remove('active');
                     aistudioIcon.classList.add('active');
+                    notebooklmIcon.classList.remove('active');
+                    modeToggleButton.setAttribute('data-tooltip', 'Switch to Gemini mode');
+                } else if (mode === 'notebooklm') {
+                    // Currently in NotebookLM mode - show NotebookLM icon, click will switch to Gemini
+                    geminiIcon.classList.remove('active');
+                    aistudioIcon.classList.remove('active');
+                    notebooklmIcon.classList.add('active');
                     modeToggleButton.setAttribute('data-tooltip', 'Switch to Gemini mode');
                 } else {
                     // Currently in Gemini mode - show Gemini icon, click will switch to AI Studio
                     geminiIcon.classList.add('active');
                     aistudioIcon.classList.remove('active');
+                    notebooklmIcon.classList.remove('active');
                     modeToggleButton.setAttribute('data-tooltip', 'Switch to AI Studio mode');
                 }
                 
@@ -761,7 +792,9 @@
             }
 
             modeToggleButton.addEventListener('click', () => {
-                const newMode = currentAppMode === 'gemini' ? 'aistudio' : 'gemini';
+                const newMode = currentAppMode === 'notebooklm'
+                    ? 'gemini'
+                    : (currentAppMode === 'gemini' ? 'aistudio' : 'gemini');
                 window.electronAPI.toggleAppMode(newMode);
             });
 
@@ -840,7 +873,8 @@
             let lastBackgroundColor = null;
             let savedColors = {
                 gemini: null,
-                aistudio: null
+                aistudio: null,
+                notebooklm: null
             };
             
             // Load saved colors from localStorage
@@ -885,22 +919,51 @@
                     // Query multiple possible background colors from the main site
                     const bgColor = await window.electronAPI.executeInMainView(`
                         (() => {
+                            const transparent = (color) => {
+                                if (!color || color === 'transparent') return true;
+                                const match = color.match(/rgba?\(([^)]+)\)/);
+                                if (!match) return false;
+                                const parts = match[1].split(',').map(p => p.trim());
+                                if (parts.length < 4) return false;
+                                const alpha = parseFloat(parts[3]);
+                                return Number.isNaN(alpha) ? false : alpha === 0;
+                            };
+
+                            const getBg = (el) => {
+                                if (!el) return null;
+                                const style = window.getComputedStyle(el);
+                                const bg = style.backgroundColor;
+                                const bgImg = style.backgroundImage;
+                                if (!transparent(bg)) return bg;
+                                if (bgImg && bgImg !== 'none') return bg;
+                                return null;
+                            };
+
+                            const points = [
+                                [12, 8], [40, 8], [80, 8],
+                                [12, 24], [40, 24], [80, 24],
+                                [120, 16]
+                            ];
+
+                            for (const [x, y] of points) {
+                                let el = document.elementFromPoint(x, y);
+                                while (el && el !== document.documentElement) {
+                                    const bg = getBg(el);
+                                    if (bg) return bg;
+                                    el = el.parentElement;
+                                }
+                            }
+
                             const root = document.documentElement;
                             const body = document.body;
                             const header = document.querySelector('header, .header, [role="banner"], .top-bar, .app-bar');
-                            
-                            // Try to get the most visible background color
-                            const rootBg = window.getComputedStyle(root).backgroundColor;
-                            const bodyBg = window.getComputedStyle(body).backgroundColor;
+
                             const headerBg = header ? window.getComputedStyle(header).backgroundColor : null;
-                            
-                            // Return the first non-transparent color
-                            if (headerBg && headerBg !== 'rgba(0, 0, 0, 0)' && headerBg !== 'transparent') {
-                                return headerBg;
-                            }
-                            if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') {
-                                return bodyBg;
-                            }
+                            const bodyBg = window.getComputedStyle(body).backgroundColor;
+                            const rootBg = window.getComputedStyle(root).backgroundColor;
+
+                            if (headerBg && !transparent(headerBg)) return headerBg;
+                            if (bodyBg && !transparent(bodyBg)) return bodyBg;
                             return rootBg;
                         })()
                     `);

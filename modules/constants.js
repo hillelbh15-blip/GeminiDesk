@@ -16,6 +16,7 @@ const STABLE_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit
 const SESSION_PARTITION = 'persist:gemini-session';
 const GEMINI_URL = 'https://gemini.google.com/app';
 const AISTUDIO_URL = 'https://aistudio.google.com/';
+const NOTEBOOKLM_URL = 'https://notebooklm.google.com/';
 
 module.exports = {
     isMac,
@@ -28,6 +29,7 @@ module.exports = {
     STABLE_USER_AGENT,
     SESSION_PARTITION,
     GEMINI_URL,
-    AISTUDIO_URL
+    AISTUDIO_URL,
+    NOTEBOOKLM_URL
 };
 
